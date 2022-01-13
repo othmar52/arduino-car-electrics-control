@@ -3,7 +3,6 @@ Arduino based solution to control lights, turn signals, wiper, horn, etc. of a M
 
 This is a tiny part of a massive DIY mod of a Mercedes Sprinter for having it controlled by disabled people without the ability to use the normal controls for:
 - turn signals
-- horn
 - flash light
 - upper beam headlights
 - hazard flasher

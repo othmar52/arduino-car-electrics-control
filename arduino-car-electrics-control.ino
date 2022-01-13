@@ -6,8 +6,8 @@
 Adafruit_MCP23017 mcp1;
 Adafruit_MCP23017* mcpr = &mcp1;
 
-
-#define NUM_BUTTONS 3
+#define NUM_BUTTONS 4
+#define NUM_RELAYS 8
 
 /*
       7   6   5   4   3   2   1   0          3V  GND GND GND
@@ -20,75 +20,87 @@ Adafruit_MCP23017* mcpr = &mcp1;
       |   |   |   |   |   |   |   |   |   |   |   |   |   |
       8   9  10  11  12  13  14  15  3V  GND      A5  A4
 */
-// pin numbers of MCP23017 for pushbuttons
-#define MCP_PIN_BTN_1 8
-#define MCP_PIN_BTN_2 9
-#define MCP_PIN_BTN_3 10
 
-#define MCP_PIN_RELAY_1 7
+// pin numbers of MCP23017 for pushbuttons
+#define MCP_PIN_BTN_HEAD_LEFT 8
+#define MCP_PIN_BTN_HEAD_RIGHT 9
+#define MCP_PIN_BTN_WRIST_LEFT 10
+#define MCP_PIN_BTN_WRIST_RIGHT 11
+
+// pin numbers of MCP23017 for relays
+#define MCP_PIN_RELAY_TURN_LEFT 0
+#define MCP_PIN_RELAY_TURN_RIGHT 1
+#define MCP_PIN_RELAY_BEAM_HEADLIGHTS 3
+#define MCP_PIN_RELAY_FLASH_LIGHT 2
+#define MCP_PIN_RELAY_HAZARD_FLASHER 4
+#define MCP_PIN_RELAY_WIPER 5
+#define MCP_PIN_RELAY_FOUNTAIN_SOLUTION 6
+#define MCP_PIN_RELAY_REAR_FOG_LAMP 7
+
+#define WIPER_MODE_OFF 0
+#define WIPER_MODE_SLOW 1
+#define WIPER_MODE_MEDIUM 2
+#define WIPER_MODE_FAST 3
+
+#define TURN_SIGNAL_LISTEN_SHORT 300
+#define TURN_SIGNAL_LISTEN_LONG 3000
+#define TURN_SIGNAL_STOP_AFTER 5000
+
+#define FOUNTAIN_SOLUTION_DURATION 2000
+
+#define FLASH_LIGHT_CYCLES 4
+#define FLASH_LIGHT_ON 200
+#define FLASH_LIGHT_OFF 100
+
+#define HEAD_LEFT_BUTTON_LISTEN_SHORT 500
+#define HEAD_RIGHT_BUTTON_LISTEN_SHORT 400
 
 // Pins, used by buttons
 const uint8_t BUTTON_PINS[NUM_BUTTONS] = {
-  MCP_PIN_BTN_1,
-  MCP_PIN_BTN_2,
-  MCP_PIN_BTN_3
+  MCP_PIN_BTN_HEAD_LEFT,
+  MCP_PIN_BTN_HEAD_RIGHT,
+  MCP_PIN_BTN_WRIST_LEFT,
+  MCP_PIN_BTN_WRIST_RIGHT
+};
+
+// Pins, used by relays
+const uint8_t RELAY_PINS[NUM_RELAYS] = {
+  MCP_PIN_RELAY_TURN_LEFT,
+  MCP_PIN_RELAY_TURN_RIGHT,
+  MCP_PIN_RELAY_BEAM_HEADLIGHTS,
+  MCP_PIN_RELAY_FLASH_LIGHT,
+  MCP_PIN_RELAY_HAZARD_FLASHER,
+  MCP_PIN_RELAY_WIPER,
+  MCP_PIN_RELAY_FOUNTAIN_SOLUTION,
+  MCP_PIN_RELAY_REAR_FOG_LAMP
 };
 
 // Helper to track push duration for each button
-unsigned long BUTTON_LASTDOWN[NUM_BUTTONS] = {0, 0, 0};
+unsigned long BUTTON_LASTDOWN[NUM_BUTTONS] = {0, 0, 0, 0};
+unsigned long RELAY_STATE[NUM_RELAYS] = {false, false, false, false, false, false, false, false};
+
+unsigned long flashLightLoopStart = 0;
+unsigned long turnSignalLoopUntil = 0;
+unsigned long fountainLoopUntil = 0;
+
+uint8_t turnSignalTargetPin;
+uint8_t currentWiperMode = WIPER_MODE_OFF;
 
 // Button debounce wrappers
 BounceMcp * buttons = new BounceMcp[NUM_BUTTONS];
 
-bool relayPinState = false;
-
-void setupButtons() {
-
-  // init push buttons
-  for (int i = 0; i < NUM_BUTTONS; i++) {
-    mcpr->pinMode(BUTTON_PINS[i], INPUT);
-    mcpr->pullUp(BUTTON_PINS[i], HIGH);
-    mcpr->pinMode(MCP_PIN_RELAY_1, OUTPUT);
-    mcpr->pullUp(MCP_PIN_RELAY_1, HIGH);
-    mcpr->digitalWrite(MCP_PIN_RELAY_1, HIGH);
-    buttons[i].attach(*mcpr, BUTTON_PINS[i], 5);
-  }
-
-}
-
-
-void loopButtons() {
-
-  for (int i = 0; i < NUM_BUTTONS; i++)  {
-    // Updating all debouncers
-    buttons[i].update();
-    if ( buttons[i].fell() ) {
-      BUTTON_LASTDOWN[i] = millis();
-    }
-
-    if ( buttons[i].rose() ) {
-      // When button was released...
-      handleButtonRelease(i, millis() - BUTTON_LASTDOWN[i]);
-    }
-  }
-}
-
-void handleButtonRelease(uint8_t eIdx, int holdTime) { 
-  Serial.print(eIdx);
-  Serial.print(" push ");
-  Serial.println(holdTime);
-  mcpr->digitalWrite(MCP_PIN_RELAY_1, relayPinState);
-  relayPinState = !relayPinState;
-}
-
 void setup() {
   Serial.begin(115200);
-  pinMode(1, INPUT);
-  pinMode(2, INPUT);
+  // setup MCP23017
   mcp1.begin(0);
-
   setupButtons();
+  setupRelays();
 }
+
 void loop() {
   loopButtons();
+  flashLightLoop();
+  turnSignalLoop();
+  wiperLoop();
+  fountainSolutionLoop();
 }

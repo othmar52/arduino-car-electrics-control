@@ -41,5 +41,4 @@ void turnSignalLoop() {
   if(isRelayOff(turnSignalTargetPin)) {
     setRelayOnForPin(turnSignalTargetPin);
   }
-  
 }

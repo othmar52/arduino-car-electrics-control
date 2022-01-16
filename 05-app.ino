@@ -46,7 +46,8 @@ void handleButtonWristLeft(int holdTime) {
   // ensure turn signals are both off
   setRelayOffForPin(MCP_PIN_RELAY_TURN_LEFT);
   setRelayOffForPin(MCP_PIN_RELAY_TURN_RIGHT);
-  setRelayToggleForPin(MCP_PIN_RELAY_HAZARD_FLASHER);
+  // now init the toggle impulse for hazard flasher
+  hazardFlasherLoopUntil = millis() + HAZARD_FLASHER_TOGGLE_DURATION;
 }
 
 /*
@@ -93,5 +94,21 @@ void flashLightLoop() {
       return;
     }
   }
-  
+}
+
+/**
+ * this needs a single impulse for toggle instead of a permanent HIGH
+ */
+void hazardFlasherLoop() {
+  if (hazardFlasherLoopUntil == 0) {
+    return;
+  }
+  if(millis() > hazardFlasherLoopUntil) {
+    hazardFlasherLoopUntil = 0;
+    setRelayOffForPin(MCP_PIN_RELAY_HAZARD_FLASHER);
+    return;
+  }
+  if(isRelayOff(MCP_PIN_RELAY_HAZARD_FLASHER)) {
+    setRelayOnForPin(MCP_PIN_RELAY_HAZARD_FLASHER);
+  }
 }

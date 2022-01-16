@@ -4,7 +4,8 @@
 //  hazard flasher is on and we get a turn left|right command?
 
 /*
- * primary function: start flash light cycles based on configuration or turn off high beam headlights
+ * primary function A: start flash light cycles based on configuration
+ * primary function B: turn off high beam headlights in case it is on
  * secondary function: toggle high beam headlights
  */
 void handleButtonHeadLeft(int holdTime) {

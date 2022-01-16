@@ -1,3 +1,8 @@
+/*
+ * https://github.com/othmar52/arduino-car-electrics-control
+ */
+
+#include "X9C.h"
 #include <Bounce2mcp.h>
 
 //#include <Wire.h>
@@ -8,6 +13,25 @@ Adafruit_MCP23017* mcpr = &mcp1;
 
 #define NUM_BUTTONS 4
 #define NUM_RELAYS 8
+
+/*
+                   DIGITAL POTENTIOMETER
+                        X9C102 (1K)
+                         TOP VIEW
+                   ┌────────U────────┐
+                   │ ●               │
+    Arduino D5 <───│1 INC       Vcc 8│──> Arduino 5V
+                   │                 │
+    Arduino D6 <───│2 U/D        CS 7│──> Arduino D7
+                   │                 │
+             * <───│3 VH/RH   VL/RL 6│──>
+                   │                 │
+   Arduino GND <───│4 Vss     VW/RW 5│──> *
+                   │                 │
+                   └─────────────────┘
+
+      *Between pins 3 and 5 we have our dynamic resistor
+*/
 
 /*
       7   6   5   4   3   2   1   0          3V  GND GND GND
@@ -36,6 +60,10 @@ Adafruit_MCP23017* mcpr = &mcp1;
 #define MCP_PIN_RELAY_WIPER 5
 #define MCP_PIN_RELAY_FOUNTAIN_SOLUTION 6
 #define MCP_PIN_RELAY_REAR_FOG_LAMP 7
+
+#define DIGIPOT_CSPIN 7
+#define DIGIPOT_INCPIN 5
+#define DIGIPOT_UDPIN 6
 
 #define WIPER_MODE_OFF 0
 #define WIPER_MODE_SLOW 1
@@ -89,12 +117,15 @@ uint8_t currentWiperMode = WIPER_MODE_OFF;
 // Button debounce wrappers
 BounceMcp * buttons = new BounceMcp[NUM_BUTTONS];
 
+X9C digiPot;
+
 void setup() {
   Serial.begin(115200);
   // setup MCP23017
   mcp1.begin(0);
   setupButtons();
   setupRelays();
+  setupDigiPot();
 }
 
 void loop() {

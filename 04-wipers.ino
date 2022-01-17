@@ -85,17 +85,3 @@ void wiperLoop() {
     setRelayOnForPin(MCP_PIN_RELAY_WIPER);
   }
 }
-
-
-void fountainSolutionLoop() {
-  if (fountainLoopUntil == 0) {
-    return;
-  }
-  if(millis() < fountainLoopUntil && isRelayOff(MCP_PIN_RELAY_FOUNTAIN_SOLUTION)) {
-    setRelayOnForPin(MCP_PIN_RELAY_FOUNTAIN_SOLUTION);
-  }
-  if(millis() > fountainLoopUntil) {
-    setRelayOffForPin(MCP_PIN_RELAY_FOUNTAIN_SOLUTION);
-    fountainLoopUntil = 0;
-  }
-}

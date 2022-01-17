@@ -85,7 +85,6 @@ Adafruit_MCP23017* mcpr = &mcp1;
 #define TURN_SIGNAL_LISTEN_LONG 3000
 #define TURN_SIGNAL_STOP_AFTER 5000
 
-#define FOUNTAIN_SOLUTION_DURATION 2000
 #define HAZARD_FLASHER_TOGGLE_DURATION 1000
 
 #define FLASH_LIGHT_CYCLES 4
@@ -123,7 +122,6 @@ unsigned long RELAY_STATE[NUM_RELAYS] = {false, false, false, false, false, fals
 
 unsigned long flashLightLoopStart = 0;
 unsigned long turnSignalLoopUntil = 0;
-unsigned long fountainLoopUntil = 0;
 unsigned long hazardFlasherLoopUntil = 0;
 
 uint8_t turnSignalTargetPin;
@@ -148,6 +146,5 @@ void loop() {
   flashLightLoop();
   turnSignalLoop();
   wiperLoop();
-  fountainSolutionLoop();
   hazardFlasherLoop();
 }

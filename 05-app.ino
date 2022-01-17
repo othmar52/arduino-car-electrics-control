@@ -9,14 +9,18 @@
  * secondary function: toggle high beam headlights
  */
 void handleButtonHeadLeft(int holdTime) {
-  if (holdTime < HEAD_LEFT_BUTTON_LISTEN_SHORT) {
-    if (isRelayOn(MCP_PIN_RELAY_BEAM_HEADLIGHTS)) {
-      setRelayToggleForPin(MCP_PIN_RELAY_BEAM_HEADLIGHTS);
-      return;
-    }
-    flashLightLoopStart = millis();
+  if (holdTime > HEAD_LEFT_BUTTON_LISTEN_SHORT) {
     return;
   }
+  if (isRelayOn(MCP_PIN_RELAY_BEAM_HEADLIGHTS)) {
+    setRelayToggleForPin(MCP_PIN_RELAY_BEAM_HEADLIGHTS);
+    return;
+  }
+  flashLightLoopStart = millis();
+}
+
+void handleButtonHeadLeftEnterLongpress() {
+  Serial.println("enter longpress for head left");
   setRelayToggleForPin(MCP_PIN_RELAY_BEAM_HEADLIGHTS);
 }
 
@@ -29,7 +33,13 @@ void handleButtonHeadRight(int holdTime) {
     loopWiperModes();
     return;  
   }
-  fountainLoopUntil = millis() + FOUNTAIN_SOLUTION_DURATION;
+  //fountainLoopUntil = millis() + FOUNTAIN_SOLUTION_DURATION;
+  setRelayOffForPin(MCP_PIN_RELAY_FOUNTAIN_SOLUTION);
+}
+
+void handleButtonHeadRightEnterLongpress() {
+  Serial.println("enter longpress for head right");
+  setRelayOnForPin(MCP_PIN_RELAY_FOUNTAIN_SOLUTION);
 }
 
 /*
@@ -42,6 +52,11 @@ void handleButtonWristLeft(int holdTime) {
     handleTurnSignalButton(holdTime, MCP_PIN_RELAY_TURN_LEFT, MCP_PIN_RELAY_TURN_RIGHT);
     return;
   }
+}
+
+
+void handleButtonWristLeftEnterLongpress() {
+  Serial.println("enter longpress for wrist left");
 
   // ensure turn signals are both off
   setRelayOffForPin(MCP_PIN_RELAY_TURN_LEFT);
@@ -49,6 +64,7 @@ void handleButtonWristLeft(int holdTime) {
   // now init the toggle impulse for hazard flasher
   hazardFlasherLoopUntil = millis() + HAZARD_FLASHER_TOGGLE_DURATION;
 }
+
 
 /*
  * primary function: turn right signal for X seconds & disable turn left signal
@@ -60,6 +76,10 @@ void handleButtonWristRight(int holdTime) {
     handleTurnSignalButton(holdTime, MCP_PIN_RELAY_TURN_RIGHT, MCP_PIN_RELAY_TURN_LEFT);
     return;
   }
+}
+
+void handleButtonWristRightEnterLongpress() {
+  Serial.println("enter longpress for wrist right");
   setRelayToggleForPin(MCP_PIN_RELAY_REAR_FOG_LAMP);
 }
 
@@ -111,4 +131,22 @@ void hazardFlasherLoop() {
   if(isRelayOff(MCP_PIN_RELAY_HAZARD_FLASHER)) {
     setRelayOnForPin(MCP_PIN_RELAY_HAZARD_FLASHER);
   }
+}
+
+
+bool reachedLongestInterval(uint8_t btnIdx, int holdTime) {
+  if (btnIdx == MCP_PIN_BTN_HEAD_LEFT && holdTime >= HEAD_LEFT_BUTTON_LISTEN_SHORT) {
+    return true;
+  }
+  if (btnIdx == MCP_PIN_BTN_HEAD_RIGHT && holdTime >= HEAD_RIGHT_BUTTON_LISTEN_SHORT) {
+    return true;
+  }
+  if (btnIdx == MCP_PIN_BTN_WRIST_LEFT && holdTime >= TURN_SIGNAL_LISTEN_LONG) {
+    return true;
+  }
+  if (btnIdx == MCP_PIN_BTN_WRIST_RIGHT && holdTime >= TURN_SIGNAL_LISTEN_LONG) {
+    return true;
+  }
+
+  return false;
 }

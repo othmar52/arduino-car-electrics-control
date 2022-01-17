@@ -117,6 +117,8 @@ const uint8_t RELAY_PINS[NUM_RELAYS] = {
 
 // Helper to track push duration for each button
 unsigned long BUTTON_LASTDOWN[NUM_BUTTONS] = {0, 0, 0, 0};
+unsigned long BUTTON_ISPRESSED[NUM_BUTTONS] = {false, false, false, false};
+unsigned long BUTTON_EXCEEDS_LONGPRESS[NUM_BUTTONS] = {false, false, false, false};
 unsigned long RELAY_STATE[NUM_RELAYS] = {false, false, false, false, false, false, false, false};
 
 unsigned long flashLightLoopStart = 0;
